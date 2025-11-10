@@ -1,48 +1,115 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
-// Ratings holds product feedback details
-type Ratings struct {
-	ProductID string
-	Rating    int
-	Comment   string
-	User      string
+// CommentDetail holds the comment text and when it was created
+type CommentDetail struct {
+	CreatedTime time.Time
+	Comment     string
 }
 
-// printRatings displays the details and feedback message
-func printRatings(r Ratings) {
-	fmt.Println("User:", r.User)
-	fmt.Println("Product ID:", r.ProductID)
-	fmt.Println("Rating:", r.Rating)
-	fmt.Println("Comment:", r.Comment)
+// RatingDetail stores individual user feedback
+type RatingDetail struct {
+	User    string
+	Rating  int
+	Comment CommentDetail
+}
 
-	if r.Rating >= 5 {
-		fmt.Println("Thank you for your feedback! We hope you're happy with the purchase!")
-	} else {
-		fmt.Println("Oh no! Sorry for your experience. We'll try to improve!")
-	}
-
-	fmt.Println("////////////////////////////////")
+// Rating represents the overall rating info for a product
+type Rating struct {
+	RatingID    string
+	AvgRating   float64
+	AllFeedback []RatingDetail
 }
 
 func main() {
-	// Creating two product ratings
-	apple := Ratings{
-		ProductID: "PD01",
-		Rating:    5,
-		Comment:   "iphone share your patent rights",
-		User:      "User1",
+	// Map of ProductID -> RatingID
+	productRatingsMap := map[string]string{
+		"PD01": "R001",
+		"PD02": "R002",
 	}
 
-	vanillaIceCream := Ratings{
-		ProductID: "PD02",
-		Rating:    0,
-		Comment:   "Android share your patent rights",
-		User:      "User2",
+	// Slice of feedback for Product 1
+	product1Feedback := []RatingDetail{
+		{
+			User:   "User1",
+			Rating: 5,
+			Comment: CommentDetail{
+				CreatedTime: time.Now(),
+				Comment:     "Excellent product!",
+			},
+		},
+		{
+			User:   "User3",
+			Rating: 4,
+			Comment: CommentDetail{
+				CreatedTime: time.Now(),
+				Comment:     "Good quality overall.",
+			},
+		},
 	}
 
-	// Printing both ratings
-	printRatings(apple)
-	printRatings(vanillaIceCream)
+	// Slice of feedback for Product 2
+	product2Feedback := []RatingDetail{
+		{
+			User:   "User2",
+			Rating: 2,
+			Comment: CommentDetail{
+				CreatedTime: time.Now(),
+				Comment:     "Not happy with the performance.",
+			},
+		},
+		{
+			User:   "User4",
+			Rating: 3,
+			Comment: CommentDetail{
+				CreatedTime: time.Now(),
+				Comment:     "Okayish product.",
+			},
+		},
+	}
+
+	// Create Rating structs
+	rating1 := Rating{
+		RatingID:    productRatingsMap["PD01"],
+		AvgRating:   calculateAverage(product1Feedback),
+		AllFeedback: product1Feedback,
+	}
+
+	rating2 := Rating{
+		RatingID:    productRatingsMap["PD02"],
+		AvgRating:   calculateAverage(product2Feedback),
+		AllFeedback: product2Feedback,
+	}
+
+	// Print results
+	printRatingDetails("PD01", rating1)
+	printRatingDetails("PD02", rating2)
+}
+
+// calculateAverage computes average rating from all feedback
+func calculateAverage(details []RatingDetail) float64 {
+	total := 0
+	for _, d := range details {
+		total += d.Rating
+	}
+	if len(details) == 0 {
+		return 0
+	}
+	return float64(total) / float64(len(details))
+}
+
+// printRatingDetails displays full rating info
+func printRatingDetails(productID string, rating Rating) {
+	fmt.Printf("Product ID: %s\n", productID)
+	fmt.Printf("Average Rating: %.1f\n", rating.AvgRating)
+	fmt.Println("Feedbacks:")
+	for _, f := range rating.AllFeedback {
+		fmt.Printf(" - %s rated %d at %s: \"%s\"\n",
+			f.User, f.Rating, f.Comment.CreatedTime.Format("2006-01-02 15:04:05"), f.Comment.Comment)
+	}
+	fmt.Println("====================================")
 }
